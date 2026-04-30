@@ -1,0 +1,32 @@
+services:
+  backend:
+    image: python:3.11-slim
+    working_dir: /app/backend
+    volumes:
+      - .:/app
+    environment:
+      APP_NAME: "BTC TimesFM Dashboard"
+      CORS_ORIGINS: "http://localhost:5173"
+      DEV_FAKE_FORECAST: "${DEV_FAKE_FORECAST:-true}"
+      INFERENCE_DEVICE: "cpu"
+      SQLITE_PATH: "/app/backend/btc_timesfm.db"
+    command: >
+      sh -c "pip install uv &&
+             uv pip install --system -e . &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8000:8000"
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app/frontend
+    volumes:
+      - .:/app
+    environment:
+      VITE_API_BASE_URL: "http://localhost:8000"
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
